@@ -26,9 +26,10 @@ class WindowWaveforms:
         self.stream_id = ".".join(self.stream_id.split(".")[:2])
 
 
-    def resample_waveform(self, fmin=1, fmax=20):
+    def resample_waveform(self, fmin:float=1, fmax:float=20):
         """
-        Resample the waveforms to match the input of the model
+        Resample the waveforms to match the input frequencies for the models.
+        Data is also bandpass filtered by specified limites
 
         Args:
             fmin (int, optional): frequency lower limit. Defaults to 1.
@@ -42,7 +43,7 @@ class WindowWaveforms:
 
         self.stream = self.stream.detrend("demean")
         self.stream = self.stream.filter("bandpass", freqmin=fmin, freqmax=fmax)
-        self.stream.interpolate(sampling_rate=100, method="linear")
+        self.stream.interpolate(sampling_rate=self.freq, method="linear")
 
         self.stream = self.stream.trim(
             self.begin_time, self.end_time, pad=True, fill_value=0

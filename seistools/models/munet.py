@@ -68,7 +68,6 @@ def lta_block(input_tensor, n_filters, batchnorm=True, lname=""):
     # I used 8 to match the output of the first upsampling which is 75
     x = layers.AveragePooling1D(8)(x)
     x = AbsLayer()(x)
-    # x = layers.Lambda(lambda x: tf.abs(x), output_shape=x.shape[1:], arguments={"tf":tf})(x)
     if batchnorm:
         x = BatchNormalization()(x)
     x = Activation("relu", name=lname)(x)
@@ -76,19 +75,9 @@ def lta_block(input_tensor, n_filters, batchnorm=True, lname=""):
 
 
 def repeat_elem(tensor, rep):
-    # lambda function to repeat Repeats the elements of a tensor along an axis by a factor of rep.
+    # Repeats the elements of a tensor along an axis by a factor of rep.
     # If tensor has shape (None, 256,256,3), lambda will return a tensor of shape
-    # (None, 256,256,6), if specified axis=3 and rep=2.
-
-    # return layers.Lambda(
-    #     lambda x, repnum: K.repeat_elements(x, repnum, axis=2),
-    #     arguments={"repnum": rep},
-    #     output_shape=tensor.shape[1:]
-    # )(tensor)
-    # return layers.Lambda(
-    #     lambda x: tf.repeat(x, rep, axis=2), arguments={"tf":tf},
-    #     output_shape=tf.TensorShape([tensor.shape[1], tensor.shape[2] * rep])
-    # )(tensor)
+    # (None, 256,256,6), when rep=2.
 
     return RepeatElementsLayer(rep, axis=2)(tensor)
 
