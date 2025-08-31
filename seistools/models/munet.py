@@ -56,7 +56,7 @@ def lta_block(input_tensor, n_filters, batchnorm=True, lname=""):
     # Use Average pooling to compute the average after convolution.
     # I used 8 to match the output of the first upsampling which is 75
     x = layers.AveragePooling1D(8)(x)
-    x = layers.Lambda(lambda x: K.abs(x), output_shape=x.shape[1:])(x)
+    x = layers.Lambda(lambda x: tf.abs(x), output_shape=x.shape[1:])(x)
     if batchnorm:
         x = BatchNormalization()(x)
     x = Activation("relu", name=lname)(x)
@@ -68,10 +68,14 @@ def repeat_elem(tensor, rep):
     # If tensor has shape (None, 256,256,3), lambda will return a tensor of shape
     # (None, 256,256,6), if specified axis=3 and rep=2.
 
+    # return layers.Lambda(
+    #     lambda x, repnum: K.repeat_elements(x, repnum, axis=2),
+    #     arguments={"repnum": rep},
+    #     output_shape=tensor.shape[1:]
+    # )(tensor)
     return layers.Lambda(
-        lambda x, repnum: K.repeat_elements(x, repnum, axis=2),
-        arguments={"repnum": rep},
-        output_shape=tensor.shape[1:]
+        lambda x: tf.repeat(x, rep, axis=2),
+        output_shape=tf.TensorShape([tensor.shape[1], tensor.shape[2] * rep])
     )(tensor)
 
 
@@ -92,12 +96,12 @@ def attention_block(x, gating, inter_shape, lname=""):
     """
     1D attention block modified after arXiv:1804.03999v3
     """
-    shape_x = x.shape #K.int_shape(x)
-    shape_g = gating.shape #K.int_shape(gating)
+    shape_x = x.shape
+    shape_g = gating.shape
 
     # Getting the x signal to the same shape as the gating signal
     theta_x = layers.Conv1D(inter_shape, 1, strides=1, padding="same")(x)  # 16
-    shape_theta_x = theta_x.shape #K.int_shape(theta_x)
+    shape_theta_x = theta_x.shape
 
     # Getting the gating signal to the same number of filters as the inter_shape
     phi_g = layers.Conv1D(inter_shape, 1, padding="same")(gating)
@@ -111,7 +115,7 @@ def attention_block(x, gating, inter_shape, lname=""):
     act_xg = layers.Activation("relu")(concat_xg)
     psi = layers.Conv1D(1, 1, padding="same")(act_xg)
     sigmoid_xg = layers.Activation("sigmoid")(psi)
-    shape_sigmoid = sigmoid_xg.shape #K.int_shape(sigmoid_xg)
+    shape_sigmoid = sigmoid_xg.shape
     upsample_psi = layers.UpSampling1D(size=(shape_x[1] // shape_sigmoid[1]))(
         sigmoid_xg
     )  # 32
