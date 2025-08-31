@@ -1,26 +1,37 @@
 import os
 
-# os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
-
-import tensorflow as tf
 import keras.backend as K
+import keras.saving
+import tensorflow as tf
 from keras import layers
-from keras.layers import (
-    Dense,
-    Input,
-    Conv1D,
-    Dropout,
-    Activation,
-    Concatenate,
-    MaxPooling1D,
-    UpSampling1D,
-    Conv1DTranspose,
-    BatchNormalization,
-)
+from keras.layers import (Activation, BatchNormalization, Concatenate, Conv1D,
+                          Conv1DTranspose, Dense, Dropout, Input, Layer,
+                          MaxPooling1D, UpSampling1D)
 from tensorflow.keras.models import Model
-from tensorflow.keras.optimizers import Adam
+
 from seistools.utils import get_repo_dir
 
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
+
+@keras.saving.register_keras_serializable()
+class RepeatElementsLayer(Layer):
+    def __init__(self, rep, axis=2, **kwargs):
+        super(RepeatElementsLayer, self).__init__(**kwargs)
+        self.rep = rep
+        self.axis = axis
+    
+    def call(self, inputs):
+        return tf.repeat(inputs, self.rep, axis=self.axis)
+    
+    def get_config(self):
+        config = super(RepeatElementsLayer, self).get_config()
+        config.update({"rep": self.rep, "axis": self.axis})
+        return config
+
+@keras.saving.register_keras_serializable()
+class AbsLayer(layers.Layer):
+    def call(self, inputs):
+        return tf.abs(inputs)
 
 # ----------------------------------- Functions for building the model -----------------------------------
 def conv1D_block(input_tensor, n_filters, kernel_size=3, batchnorm=True):
@@ -56,7 +67,8 @@ def lta_block(input_tensor, n_filters, batchnorm=True, lname=""):
     # Use Average pooling to compute the average after convolution.
     # I used 8 to match the output of the first upsampling which is 75
     x = layers.AveragePooling1D(8)(x)
-    x = layers.Lambda(lambda x: tf.abs(x), output_shape=x.shape[1:])(x)
+    x = AbsLayer()(x)
+    # x = layers.Lambda(lambda x: tf.abs(x), output_shape=x.shape[1:], arguments={"tf":tf})(x)
     if batchnorm:
         x = BatchNormalization()(x)
     x = Activation("relu", name=lname)(x)
@@ -73,10 +85,12 @@ def repeat_elem(tensor, rep):
     #     arguments={"repnum": rep},
     #     output_shape=tensor.shape[1:]
     # )(tensor)
-    return layers.Lambda(
-        lambda x: tf.repeat(x, rep, axis=2),
-        output_shape=tf.TensorShape([tensor.shape[1], tensor.shape[2] * rep])
-    )(tensor)
+    # return layers.Lambda(
+    #     lambda x: tf.repeat(x, rep, axis=2), arguments={"tf":tf},
+    #     output_shape=tf.TensorShape([tensor.shape[1], tensor.shape[2] * rep])
+    # )(tensor)
+
+    return RepeatElementsLayer(rep, axis=2)(tensor)
 
 
 def gating_signal(input, out_size, batchnorm=False):
@@ -233,7 +247,8 @@ def load_munet(path:str=munet_pth, lr:float=0.001):
 
     model = MUnet(input_wav, n_filters=8, dropout=0.05, batchnorm=True)
 
-    # Add label smoothing to the event detection loss function to improve stability of the training process
+    # Add label smoothing to the event detection loss function to improve 
+    # stability of the training process
     losses = {
         "Event": tf.keras.losses.BinaryCrossentropy(label_smoothing=0.01),
         "P": tf.keras.losses.binary_crossentropy,
