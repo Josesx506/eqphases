@@ -1,0 +1,28 @@
+[project]
+name = "seistools"
+version = "0.1.0"
+description = "Earthquake detection, phase picking, and association"
+authors = [
+    {name = "Joses Omojola"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+include = ["eqphases/weights/*"]
+
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "click (>=8.2.1,<9.0.0)",
+    "detecta (>=0.0.5,<0.0.6)",
+    "ipykernel (>=6.30.1,<7.0.0)",
+    "matplotlib (>=3.10.6,<4.0.0)",
+    "pyocto (>=0.1.9,<0.2.0)",
+    "scikit-learn (>=1.7.1,<2.0.0)",
+    "seisbench (>=0.10.1,<0.11.0)",
+    "tqdm (>=4.67.1,<5.0.0)",
+    "tensorflow (>=2.20.0,<3.0.0)",
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
