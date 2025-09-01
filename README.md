@@ -36,7 +36,7 @@ To launch it locally, open vscode and press `Cmd+Shift+P` to open the command pa
 `Dev Containers: Rebuild and Reopen in Container` and click it. The environment opens with all 
 dependencies installed. <br>
 Major con is that all the waveform data has to be inside the repo to run predictions. You can 
-detect phases using ``poetry run mlpicks -mdn munet -fp ./examples/data -frq 40 -fmax 19`
+detect phases using ``python seistools/pipelines/phase_picking.py -mdn munet -fp ./examples/data -frq 40 -fmax 19`
 
 > [!Note]
 > I used a relative path that references the project's root directory. Pointing to external 
