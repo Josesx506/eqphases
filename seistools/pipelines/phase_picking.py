@@ -151,3 +151,9 @@ def mlpicker_cli(model_name, file_path, save_dir, frequency, overlap,
         s_thresh=s_thresh,
         verbose=verbose
     )
+
+
+if __name__ == "__main__":
+    import multiprocessing as mp
+    mp.set_start_method("spawn", force=True)
+    mlpicker_cli()
