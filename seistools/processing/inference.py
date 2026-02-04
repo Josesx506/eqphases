@@ -99,7 +99,7 @@ def detect_phases(model_name:str, model,
                 st_id.append(ids)
                 phase.append("P")
                 prob.append(np.round(_p[pIdx], 2))
-                times_.append(UTCDateTime(st_time.timestamp + (pIdx / 100)))
+                times_.append(UTCDateTime(st_time.timestamp + (pIdx / freq)))
 
         if len(s_pb_idx) > 0:
             for sIdx in s_pb_idx:
@@ -107,7 +107,7 @@ def detect_phases(model_name:str, model,
                 st_id.append(ids)
                 phase.append("S")
                 prob.append(np.round(_s[sIdx], 2))
-                times_.append(UTCDateTime(st_time.timestamp + (sIdx / 100)))
+                times_.append(UTCDateTime(st_time.timestamp + (sIdx / freq)))
 
     # Create a dataframe for the output
     df_picks = pd.DataFrame(
